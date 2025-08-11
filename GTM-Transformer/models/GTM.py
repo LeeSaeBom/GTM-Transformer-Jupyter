@@ -268,13 +268,12 @@ class GTM(pl.LightningModule):
         self.gtrend_encoder = GTrendEmbedder(output_dim, hidden_dim, use_encoder_mask, trend_len, num_trends, gpu_num)
         self.static_feature_encoder = FusionNetwork(embedding_dim, hidden_dim, use_img, use_text)
 
-        # Decoder
+        # Decoder - 단일 레이어만 사용 (tuple return 문제 해결)
         self.decoder_linear = TimeDistributed(nn.Linear(1, hidden_dim))
-        decoder_layer = TransformerDecoderLayer(d_model=self.hidden_dim, nhead=num_heads, \
+        self.decoder_layer = TransformerDecoderLayer(d_model=self.hidden_dim, nhead=num_heads, \
                                                 dim_feedforward=self.hidden_dim * 4, dropout=0.1)
         
         if self.autoregressive: self.pos_encoder = PositionalEncoding(hidden_dim, max_len=12)
-        self.decoder = nn.TransformerDecoder(decoder_layer, num_layers)
         
         self.decoder_fc = nn.Sequential(
             nn.Linear(hidden_dim, self.output_len if not self.autoregressive else 1),
@@ -302,16 +301,18 @@ class GTM(pl.LightningModule):
             tgt = self.pos_encoder(tgt)
             tgt_mask = self._generate_square_subsequent_mask(self.output_len).to(tgt.device)
             memory = gtrend_encoding
-            decoder_out = self.decoder(tgt, memory, tgt_mask)
+            
+            # 단일 decoder layer 사용
+            decoder_out, attn_weights = self.decoder_layer(tgt, memory, tgt_mask)
             forecast = self.decoder_fc(decoder_out)
-            attn_weights = None  # For simplicity, not extracting attention weights in autoregressive mode
         else:
             # Decode (generatively/non-autoregressively)
             tgt = static_feature_fusion.unsqueeze(0)
             memory = gtrend_encoding
-            decoder_out = self.decoder(tgt, memory)
+            
+            # 단일 decoder layer 사용
+            decoder_out, attn_weights = self.decoder_layer(tgt, memory)
             forecast = self.decoder_fc(decoder_out)
-            attn_weights = None  # For simplicity, not extracting attention weights
 
         return forecast.view(-1, self.output_len), attn_weights
 
