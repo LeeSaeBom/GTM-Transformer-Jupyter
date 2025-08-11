@@ -228,7 +228,7 @@ class TransformerDecoderLayer(nn.Module):
         super(TransformerDecoderLayer, self).__setstate__(state)
 
     def forward(self, tgt, memory, tgt_mask = None, memory_mask = None, tgt_key_padding_mask = None, 
-            memory_key_padding_mask = None):
+            memory_key_padding_mask = None, tgt_is_causal = None, memory_is_causal = None):
         
         # Self-attention block
         tgt2 = self.self_attn(tgt, tgt, tgt, attn_mask=tgt_mask,
