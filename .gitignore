@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+.Python
+env/
+venv/
+gtm_env/
+
+# 데이터셋 (큰 파일 제외)
+dataset/
+dataset_small/images/
+*.pt
+*.pth
+*.ckpt
+
+# 로그
+logs/
+checkpoints/
+wandb/
+saved_models/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
